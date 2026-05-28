@@ -10,7 +10,7 @@ def generate_launch_description():
         DeclareLaunchArgument('frame_id', default_value='laser_link'),
 
         Node(
-            package='picar2_lidar',
+            package='lds02rr_lidar',
             executable='lidar_node',
             name='lidar_node',
             output='screen',

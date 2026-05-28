@@ -2,7 +2,7 @@ import os
 from glob import glob
 from setuptools import setup
 
-package_name = 'picar2_lidar'
+package_name = 'lds02rr_lidar'
 
 setup(
     name=package_name,
@@ -21,7 +21,7 @@ setup(
     license='Apache-2.0',
     entry_points={
         'console_scripts': [
-            'lidar_node = picar2_lidar.lidar_node:main',
+            'lidar_node = lds02rr_lidar.lidar_node:main',
         ],
     },
 )
