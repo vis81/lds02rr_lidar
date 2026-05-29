@@ -17,6 +17,7 @@ frame_id    : str   LaserScan frame (default laser_link)
 range_min   : float Minimum valid range in m (default 0.06)
 range_max   : float Maximum valid range in m (default 5.0)
 signal_min  : int   Minimum signal strength; readings below are set to inf (default 0)
+stamp_offset: float Seconds subtracted from scan stamp to avoid TF future-extrapolation errors over LAN (default 0.05)
 target_rpm  : float Desired motor RPM (default 300.0)
 kp          : float PI proportional gain (default 0.454)
 ki          : float PI integral gain (default 0.050)
@@ -76,7 +77,8 @@ class LidarNode(Node):
         self.declare_parameter('frame_id',   'laser_link')
         self.declare_parameter('range_min',  0.06)
         self.declare_parameter('range_max',  5.0)
-        self.declare_parameter('signal_min', 0)
+        self.declare_parameter('signal_min',   0)
+        self.declare_parameter('stamp_offset', 0.05)
         self.declare_parameter('target_rpm', 300.0)
         self.declare_parameter('kp',           0.454)
         self.declare_parameter('ki',           0.050)
@@ -90,8 +92,9 @@ class LidarNode(Node):
         self._frame_id   = self.get_parameter('frame_id').value
         self._range_min  = self.get_parameter('range_min').value
         self._range_max  = self.get_parameter('range_max').value
-        self._signal_min = self.get_parameter('signal_min').value
-        self._target_rpm = self.get_parameter('target_rpm').value
+        self._signal_min   = self.get_parameter('signal_min').value
+        self._stamp_offset = self.get_parameter('stamp_offset').value
+        self._target_rpm   = self.get_parameter('target_rpm').value
         self._kp           = self.get_parameter('kp').value
         self._ki           = self.get_parameter('ki').value
         self._ff_duty      = self.get_parameter('ff_duty').value
@@ -209,7 +212,10 @@ class LidarNode(Node):
     def _publish_scan(self, scan_time: float):
         inc = 2.0 * math.pi / _READINGS_PER_REV
         msg = LaserScan()
-        msg.header.stamp    = self._scan_stamp
+        stamp_ns = (self._scan_stamp.sec * 10**9 + self._scan_stamp.nanosec
+                    - int(self._stamp_offset * 10**9))
+        msg.header.stamp.sec     = stamp_ns // 10**9
+        msg.header.stamp.nanosec = stamp_ns  % 10**9
         msg.header.frame_id = self._frame_id
         offset = self._base_offset + self.get_parameter('angle_offset').value
         msg.angle_min       = offset
